@@ -1,0 +1,34 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "#tilemap-backgrounds": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "/Users/jerry/CMPM120/Snackpocalypse/assets",
+    "map.height": 3,
+    "map.lastUsedFormat": "json",
+    "map.tileHeight": 24,
+    "map.tileWidth": 24,
+    "map.width": 4,
+    "openFiles": [
+    ],
+    "project": "untitled.tiled-project",
+    "recentFiles": [
+    ],
+    "tileset.embedInMap": true,
+    "tileset.spacing": 1,
+    "tileset.tileSize": {
+        "height": 24,
+        "width": 24
+    }
+}
