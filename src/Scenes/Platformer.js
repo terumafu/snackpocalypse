@@ -5,9 +5,7 @@ class Platformer extends Phaser.Scene {
 
     init() {
         // variables and settings
-        this.ACCELERATION = 400;
-        this.DRAG = 500;    // DRAG < ACCELERATION = icy slide
-        this.physics.world.gravity.y = 1500;
+       
         
         this.PARTICLE_VELOCITY = 50;
         
@@ -73,7 +71,6 @@ class Platformer extends Phaser.Scene {
         }
         
         this.input.keyboard.on('keydown-P', () => {
-            //console.log(this.imagevis);
             this.imagevis++;
             if(this.imagevis == this.imagearr.length){
                 this.imagevis = 0;
@@ -102,43 +99,29 @@ class Platformer extends Phaser.Scene {
         }
         this.bggroup[this.bgvisible].visible = true;
         
-        
+        //debug function
+        /*
         this.input.keyboard.on('keydown-O', () => {
             this.changebackground();
             
-        }, this);
+        }, this);*/
         
         
-        
-        
-        //this.map = this.add.tilemap("backgrounds", 24, 24, 4, 3);
-
-        //this.tileset = this.map.addTilesetImage("tilemap-backgrounds", "backgroundsimage");
-        /*
-        this.snowLayer = this.map.createLayer("snow", this.tileset, 0, 0);
-        this.snowLayer.visible = false;
-        this.sandLayer = this.map.createLayer("sand", this.tileset, 0, 0);
-        this.sandLayer.visible = false;
-        this.forestLayer = this.map.createLayer("forest", this.tileset, 0, 0);
-        //this.forestLayer.visible = false;
-        */
-
-
-        
-
+    
         // set up player avatar
         my.sprite.player = this.physics.add.sprite(50*this.SCALE, 45*this.SCALE, "platformer_characters", "tile_0000.png").setImmovable(true);
         my.sprite.player.body.setAllowGravity(false);
         my.sprite.player.setScale(this.SCALE);
         my.sprite.player.setDepth(10);
-        // Enable collision handling
-
+        
+        //set up zombie
         this.zombie = this.physics.add.sprite(15, 45*this.SCALE, "platformer_characters", "tile_0002.png").setImmovable(true);
         this.zombie.body.setAllowGravity(false);
         this.zombie.setScale(this.SCALE);
         this.zombie.flipX = true;
         this.zombie.anims.play('zomwalk');
         
+        //set up rectangles to use as resource bars
         this.staminabar = this.add.rectangle(100,260,150,15,0xffb640,1);
         console.log(this.staminabar);
         this.staminabar.setDepth(10);
@@ -149,10 +132,7 @@ class Platformer extends Phaser.Scene {
         this.distbar = this.add.rectangle(96*4/2, 15,96*4 -40,15, 0xff0000,1);
         this.distbar.setDepth(10);
 
-        // TODO: Add coin collision handler
-         // Handle collision detection with coins
-         
-
+        
         // set up Phaser-provided cursor key input
         cursors = this.input.keyboard.createCursorKeys();
 
@@ -164,10 +144,10 @@ class Platformer extends Phaser.Scene {
             this.physics.world.debugGraphic.clear()
         }, this);
 
-        // TODO: Add movement vfx here
+       
           // movement vfx
 
-          my.vfx.walking = this.add.particles(0, 0, "kenny-particles", {
+        my.vfx.walking = this.add.particles(0, 0, "kenny-particles", {
             frame: ['smoke_03.png', 'smoke_09.png'],
             // TODO: Try: add random: true
             scale: {start: 0.01*this.SCALE, end: 0.05 *this.SCALE },
@@ -182,8 +162,7 @@ class Platformer extends Phaser.Scene {
 
         my.vfx.walking.stop();
 
-        // TODO: add camera code here
-        //this.cameras.main.setZoom(1);
+        //create a temporary floor for when the player loads in
         for(let i = 0; i < 12; i++){
             let tempsprite = this.add.sprite(i*32 + 2, 262, this.region[this.currground].sprites.ground);
             
@@ -196,38 +175,17 @@ class Platformer extends Phaser.Scene {
     }
 
     update() {
-        
+        //keep spawning ground to prevent gaps
         if(this.groundqueue.printQueue[this.groundqueue.backIndex - 1].x <= 96*4 - 34){
             this.spawnground();
         }
+        //check game end
         if(this.zombie.x >= 125  ){
             this.scene.restart();
             this.scene.start('creditsScene');
         }
-        /*
-        if(cursors.left.isDown) {
-            //my.sprite.player.setAccelerationX(-this.ACCELERATION);
-            my.sprite.player.resetFlip();
-            my.sprite.player.anims.play('walk', true);
-            // TODO: add particle following code here
-
-            my.vfx.walking.start Follow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
-
-            my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
-
-            // Only play smoke effect if touching the ground
-
-            
-
-            my.vfx.walking.start();
-            //my.vfx.walking.setParticleSpeed(100, 0);
-            my.vfx.walking.setParticleGravity(500, 0);
-            my.vfx.walking.setX(5);
-
-
-        } else if(cursors.right.isDown) {*/
-            //my.sprite.player.setAccelerationX(this.ACCELERATION);
-
+        
+        //if space is down the player does not move
         if(cursors.space.isDown){
             this.stamina+= 0.1;
             this.staminabar.width = this.stamina/100 * 150;
@@ -236,19 +194,21 @@ class Platformer extends Phaser.Scene {
             my.sprite.player.setAccelerationX(0);
             my.sprite.player.setDragX(this.DRAG);
             my.sprite.player.anims.play('idle');
-            // TODO: have the vfx stop playing
+            
             my.vfx.walking.stop();
             this.speed = 0.25 *this.SCALE/2;
             this.speedtimer = 0;
+
+            //check for if the player has stopped moving on a plant
             for(let i = this.foodqueue.frontIndex; i < this.foodqueue.backIndex; i++){
                 
                 if(this.foodqueue.printQueue[i].x > 96*2 - 50 && this.foodqueue.printQueue[i].x < 96*2 + 60){
-                    
+                    //start eating the plant, change the eating progress bar accordingly
                     this.eatingtimer++;
                     console.log(this.eatingtimer);
                     this.eatingbar.width = this.eatingtimer * 2;
                     if(this.eatingtimer >= 50){
-                        
+                        //increase stamina once food is eaten
                         this.stamina += 20;
                         if(this.stamina > 100){
                             this.stamina = 100;
@@ -263,10 +223,13 @@ class Platformer extends Phaser.Scene {
             }
             
         }else{
+            //this all occurs when the space bar is not held
             this.distance+= 0.15;
+
             if(this.distbar.width >= 0){
             this.distbar.width = 96*4 - 40 - this.distance;
             }else{
+                //if distance bar is 0, the game is over, the player wins
                 this.scene.restart();
                 this.scene.start('winScene');
             }
@@ -280,10 +243,11 @@ class Platformer extends Phaser.Scene {
             this.stamina -= 0.25 * this.speed;
             
             }else{
+                //if the player runs out of stamina they need to catch their breath, they will most likely die
                 my.sprite.player.setAccelerationX(0);
                 my.sprite.player.setDragX(this.DRAG);
                 my.sprite.player.anims.play('idle');
-            // TODO: have the vfx stop playing
+            
                 my.vfx.walking.stop();
                 this.regentimer++;
                 this.staminabar.width = 150
@@ -301,6 +265,7 @@ class Platformer extends Phaser.Scene {
 
             this.eatingbar.width = 0;
             this.eatingtimer = 0;
+            //if the region is snowy, no food spawns
             if(this.currground != 2){
                 
                 this.foodtimer -= this.speed;
@@ -316,7 +281,8 @@ class Platformer extends Phaser.Scene {
                 this.treetimer = Math.floor(Math.random() * 50) + 25;
             }
             this.bgtimer+= this.speed;
-            if(this.bgtimer >= 500){
+            //checks if its time to change the area, snowy areas are shorter
+            if(this.bgtimer >= 500 || this.bgtimer >= 300 && this.currground == 2){
                 this.changebackground();
                 this.bgtimer = 0;
             }
@@ -327,13 +293,12 @@ class Platformer extends Phaser.Scene {
             }
             my.sprite.player.setFlip(true, false);
             my.sprite.player.anims.play('walk', true);
-            // TODO: add particle following code here
+            
             my.vfx.walking.startFollow(my.sprite.player, my.sprite.player.displayWidth/2-10, my.sprite.player.displayHeight/2-5, false);
 
             my.vfx.walking.setParticleSpeed(this.PARTICLE_VELOCITY, 0);
 
-            // Only play smoke effect if touching the ground
-            //console.log(my.vfx.walking);
+            
             my.vfx.walking.start();
             my.vfx.walking.setX(-15*this.SCALE);
             my.vfx.walking.setParticleGravity(-500*this.SCALE, 0);
@@ -381,36 +346,10 @@ class Platformer extends Phaser.Scene {
             }
         }
         
-        /*}*/ if(0) {
-            // Set acceleration to 0 and have DRAG take over
-            my.sprite.player.setAccelerationX(0);
-            my.sprite.player.setDragX(this.DRAG);
-            my.sprite.player.anims.play('idle');
-            // TODO: have the vfx stop playing
-            my.vfx.walking.stop();
-        }
-
-        // player jump
-        // note that we need body.blocked rather than body.touching b/c the former applies to tilemap tiles and the latter to the "ground"
-        
-        if(Phaser.Input.Keyboard.JustDown(this.rKey)) {
-            this.scene.restart();
-        }
     }
     
     changebackground(){
-        /*
-            this.tweens.add({
-                targets: [ this.bggroup[this.bgvisible]],
-                alpha: {
-                    from: 1, 
-                    to: 1
-                },
-                
-                duration: 1,
-                //ease: 'Sine.easeInOut',
-                yoyo: false
-            })*/
+        
             var tween = this.tweens.add({
                 targets: [ this.bggroup[this.bgvisible]],
                 alpha: {
