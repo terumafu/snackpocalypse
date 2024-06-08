@@ -31,7 +31,7 @@ class Platformer extends Phaser.Scene {
         this.eatingtimer = 0;
         this.regentimer = 0;
 
-        
+        this.distance = 0;
         
     }
 
@@ -146,6 +146,9 @@ class Platformer extends Phaser.Scene {
         this.eatingbar = this.add.rectangle(150, 115,0,15, 0xffb640,1);
         this.eatingbar.setDepth(10);
         
+        this.distbar = this.add.rectangle(96*4/2, 15,96*4 -40,15, 0xff0000,1);
+        this.distbar.setDepth(10);
+
         // TODO: Add coin collision handler
          // Handle collision detection with coins
          
@@ -181,18 +184,24 @@ class Platformer extends Phaser.Scene {
 
         // TODO: add camera code here
         //this.cameras.main.setZoom(1);
-        
+        for(let i = 0; i < 12; i++){
+            let tempsprite = this.add.sprite(i*32 + 2, 262, this.region[this.currground].sprites.ground);
+            
+            tempsprite.setDepth(2);
+            this.groundqueue.enqueue(tempsprite);
+        }
         this.spawnground();
         this.spawntree();
         
     }
 
     update() {
-    
+        
         if(this.groundqueue.printQueue[this.groundqueue.backIndex - 1].x <= 96*4 - 34){
             this.spawnground();
         }
         if(this.zombie.x >= 125  ){
+            this.scene.restart();
             this.scene.start('creditsScene');
         }
         /*
@@ -254,6 +263,13 @@ class Platformer extends Phaser.Scene {
             }
             
         }else{
+            this.distance+= 0.15;
+            if(this.distbar.width >= 0){
+            this.distbar.width = 96*4 - 40 - this.distance;
+            }else{
+                this.scene.restart();
+                this.scene.start('winScene');
+            }
             if(this.zombie.x >= 15){
                 this.zombie.x-=0.5;
             }
@@ -261,7 +277,7 @@ class Platformer extends Phaser.Scene {
                 this.zombie.x = -100;
             }
             if(this.stamina >= 0){
-            this.stamina -= 0.15 * this.speed;
+            this.stamina -= 0.25 * this.speed;
             
             }else{
                 my.sprite.player.setAccelerationX(0);
@@ -440,7 +456,7 @@ class Platformer extends Phaser.Scene {
     }
     spawnground(){
         let tempsprite = this.add.sprite(96*4+ 34, 262, this.region[this.currground].sprites.ground);
-        tempsprite.setScale(1);
+        
         tempsprite.setDepth(2);
         this.groundqueue.enqueue(tempsprite);
         
